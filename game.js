@@ -13,6 +13,10 @@ class ChessGame {
         this.selectedSquare = null;
         this.playerColor = null;
         this.playerName = '';
+        this.playerAvatar = '👤';
+        
+        // LocalStorage'dan profil bilgilerini yükle
+        this.loadProfile();
         
         // Bağlantı durumunu kontrol et
         this.socket.on('connect', () => {
@@ -31,10 +35,50 @@ class ChessGame {
         this.setupSocketListeners();
     }
 
+    loadProfile() {
+        const savedProfile = localStorage.getItem('chessProfile');
+        if (savedProfile) {
+            const profile = JSON.parse(savedProfile);
+            this.playerName = profile.name || '';
+            this.playerAvatar = profile.avatar || '👤';
+        }
+    }
+
+    saveProfile() {
+        const profile = {
+            name: this.playerName,
+            avatar: this.playerAvatar
+        };
+        localStorage.setItem('chessProfile', JSON.stringify(profile));
+    }
+
     initializeEventListeners() {
-        // Play button
+        // Play button - profil kontrolü
         document.getElementById('playBtn').addEventListener('click', () => {
-            this.showLoginForm();
+            if (this.playerName) {
+                this.showLoginForm();
+            } else {
+                this.showProfileForm();
+            }
+        });
+
+        // Profile form buttons
+        document.getElementById('saveProfileBtn').addEventListener('click', () => {
+            this.handleProfileSave();
+        });
+
+        document.getElementById('backToMenuBtn').addEventListener('click', () => {
+            this.hideProfileForm();
+        });
+
+        // Avatar değiştirme
+        document.getElementById('changeAvatarBtn').addEventListener('click', () => {
+            this.changeAvatar();
+        });
+
+        // Edit profile button
+        document.getElementById('editProfileBtn').addEventListener('click', () => {
+            this.showProfileForm();
         });
 
         // Back button
@@ -44,36 +88,78 @@ class ChessGame {
 
         // Login
         document.getElementById('findGameBtn').addEventListener('click', () => {
-            const name = document.getElementById('playerName').value.trim();
-            if (name) {
-                this.playerName = name;
-                this.socket.emit('findGame', name);
+            if (this.playerName) {
+                this.socket.emit('findGame', this.playerName);
                 this.showScreen('waitingScreen');
             }
         });
 
-        // Enter tuşu ile oyun bulma
+        // Enter tuşu ile profil kaydetme
         document.getElementById('playerName').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                document.getElementById('findGameBtn').click();
+                if (document.getElementById('profileForm').classList.contains('hidden')) {
+                    document.getElementById('findGameBtn').click();
+                } else {
+                    document.getElementById('saveProfileBtn').click();
+                }
             }
         });
     }
 
-    showLoginForm() {
+    showProfileForm() {
         document.querySelector('.play-section').classList.add('hidden');
-        document.getElementById('loginForm').classList.remove('hidden');
-        // Input'a focus ver
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('profileForm').classList.remove('hidden');
+        
+        // Mevcut profil bilgilerini doldur
+        document.getElementById('playerName').value = this.playerName;
+        document.getElementById('avatarPreview').textContent = this.playerAvatar;
+        
         setTimeout(() => {
             document.getElementById('playerName').focus();
         }, 100);
     }
 
+    hideProfileForm() {
+        document.querySelector('.play-section').classList.remove('hidden');
+        document.getElementById('profileForm').classList.add('hidden');
+    }
+
+    handleProfileSave() {
+        const name = document.getElementById('playerName').value.trim();
+        if (name) {
+            this.playerName = name;
+            this.playerAvatar = document.getElementById('avatarPreview').textContent;
+            this.saveProfile();
+            this.updateUserDisplay();
+            this.showLoginForm();
+        }
+    }
+
+    changeAvatar() {
+        const avatars = ['👤', '🤴', '👑', '🎭', '🎪', '🎨', '🎯', '🎲', '🎮', '🚀', '⭐', '🔥', '💎', '🏆', '👨‍💻', '🧙‍♂️'];
+        const currentIndex = avatars.indexOf(this.playerAvatar);
+        const nextIndex = (currentIndex + 1) % avatars.length;
+        this.playerAvatar = avatars[nextIndex];
+        document.getElementById('avatarPreview').textContent = this.playerAvatar;
+    }
+
+    showLoginForm() {
+        document.querySelector('.play-section').classList.add('hidden');
+        document.getElementById('profileForm').classList.add('hidden');
+        document.getElementById('loginForm').classList.remove('hidden');
+        this.updateUserDisplay();
+    }
+
     hideLoginForm() {
         document.querySelector('.play-section').classList.remove('hidden');
         document.getElementById('loginForm').classList.add('hidden');
-        // Input'u temizle
-        document.getElementById('playerName').value = '';
+    }
+
+    updateUserDisplay() {
+        document.getElementById('userAvatar').textContent = this.playerAvatar;
+        document.getElementById('welcomeText').textContent = `Hoş geldin, ${this.playerName}!`;
+        document.getElementById('userNameDisplay').textContent = this.playerName;
     }
 
     setupSocketListeners() {
