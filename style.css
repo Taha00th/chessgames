@@ -759,7 +759,8 @@ body {
 }
 
 .square.possible-move {
-    background: #9bc53d !important;
+    background: rgba(76, 175, 80, 0.6) !important;
+    position: relative;
 }
 
 .square.possible-move::after {
@@ -767,8 +768,20 @@ body {
     position: absolute;
     width: 20px;
     height: 20px;
-    background: rgba(0,0,0,0.3);
+    background: rgba(76, 175, 80, 0.8);
     border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
+}
+
+.square.possible-move.capture::after {
+    width: 35px;
+    height: 35px;
+    background: rgba(244, 67, 54, 0.8);
+    border: 3px solid rgba(244, 67, 54, 1);
+    box-shadow: 0 0 15px rgba(244, 67, 54, 0.6);
 }
 
 .square:hover {
