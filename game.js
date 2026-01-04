@@ -1,13 +1,31 @@
 class ChessGame {
     constructor() {
-        // Backend her zaman Render'da
-        const serverUrl = 'https://chessgame-75uf.onrender.com';
+        // Backend yeni Render URL'i
+        const serverUrl = 'https://chessgameserver-yflk.onrender.com';
             
-        this.socket = io(serverUrl);
+        this.socket = io(serverUrl, {
+            transports: ['websocket', 'polling'],
+            timeout: 20000,
+            forceNew: true
+        });
+        
         this.gameState = null;
         this.selectedSquare = null;
         this.playerColor = null;
         this.playerName = '';
+        
+        // Bağlantı durumunu kontrol et
+        this.socket.on('connect', () => {
+            console.log('✅ Sunucuya bağlandı:', this.socket.id);
+        });
+        
+        this.socket.on('disconnect', () => {
+            console.log('❌ Sunucu bağlantısı kesildi');
+        });
+        
+        this.socket.on('connect_error', (error) => {
+            console.error('🔥 Bağlantı hatası:', error);
+        });
         
         this.initializeEventListeners();
         this.setupSocketListeners();
