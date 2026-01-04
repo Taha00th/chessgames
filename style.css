@@ -4,6 +4,16 @@
     box-sizing: border-box;
 }
 
+/* Scroll bar'ı gizle */
+::-webkit-scrollbar {
+    display: none;
+}
+
+html {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #2d2d2d 100%);
@@ -12,6 +22,8 @@ body {
     align-items: center;
     justify-content: center;
     overflow-x: hidden;
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
 }
 
 .screen {
@@ -26,6 +38,13 @@ body {
     max-height: 90vh;
     overflow-y: auto;
     border: 1px solid rgba(255,255,255,0.1);
+    /* Scroll bar'ı gizle */
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.screen::-webkit-scrollbar {
+    display: none;  /* Safari and Chrome */
 }
 
 .hidden {
