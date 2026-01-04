@@ -289,7 +289,127 @@ class ChessGame {
             // Taş seçme
             this.selectedSquare = { row, col };
             this.highlightSquare(row, col);
+            this.showPossibleMoves(row, col, piece);
         }
+    }
+
+    showPossibleMoves(row, col, piece) {
+        const possibleMoves = this.getPossibleMoves(row, col, piece);
+        possibleMoves.forEach(move => {
+            const square = document.querySelector(`[data-row="${move.row}"][data-col="${move.col}"]`);
+            square.classList.add('possible-move');
+            
+            // Eğer hedef karede rakip taş varsa, capture olarak işaretle
+            if (this.gameState.board[move.row][move.col]) {
+                square.classList.add('capture');
+            }
+        });
+    }
+
+    getPossibleMoves(row, col, piece) {
+        const moves = [];
+        
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                if (r === row && c === col) continue;
+                
+                if (this.isValidMove(this.gameState.board, {row, col}, {row: r, col: c}, piece)) {
+                    moves.push({row: r, col: c});
+                }
+            }
+        }
+        
+        return moves;
+    }
+
+    isValidMove(board, from, to, piece) {
+        const targetPiece = board[to.row][to.col];
+        if (targetPiece && targetPiece.color === piece.color) return false;
+        
+        const rowDiff = Math.abs(to.row - from.row);
+        const colDiff = Math.abs(to.col - from.col);
+        
+        switch (piece.type) {
+            case 'pawn':
+                return this.isValidPawnMove(board, from, to, piece.color);
+            case 'rook':
+                return this.isValidRookMove(board, from, to);
+            case 'knight':
+                return this.isValidKnightMove(from, to);
+            case 'bishop':
+                return this.isValidBishopMove(board, from, to);
+            case 'queen':
+                return this.isValidQueenMove(board, from, to);
+            case 'king':
+                return this.isValidKingMove(from, to);
+            default:
+                return false;
+        }
+    }
+
+    isValidPawnMove(board, from, to, color) {
+        const direction = color === 'white' ? -1 : 1;
+        const startRow = color === 'white' ? 6 : 1;
+        const rowDiff = to.row - from.row;
+        const colDiff = Math.abs(to.col - from.col);
+        
+        // İleri hareket
+        if (colDiff === 0) {
+            if (board[to.row][to.col]) return false;
+            if (rowDiff === direction) return true;
+            if (from.row === startRow && rowDiff === 2 * direction) return true;
+        }
+        
+        // Çapraz alma
+        if (colDiff === 1 && rowDiff === direction) {
+            return board[to.row][to.col] && board[to.row][to.col].color !== color;
+        }
+        
+        return false;
+    }
+
+    isValidRookMove(board, from, to) {
+        if (from.row !== to.row && from.col !== to.col) return false;
+        return this.isPathClear(board, from, to);
+    }
+
+    isValidKnightMove(from, to) {
+        const rowDiff = Math.abs(to.row - from.row);
+        const colDiff = Math.abs(to.col - from.col);
+        return (rowDiff === 2 && colDiff === 1) || (rowDiff === 1 && colDiff === 2);
+    }
+
+    isValidBishopMove(board, from, to) {
+        const rowDiff = Math.abs(to.row - from.row);
+        const colDiff = Math.abs(to.col - from.col);
+        if (rowDiff !== colDiff) return false;
+        return this.isPathClear(board, from, to);
+    }
+
+    isValidQueenMove(board, from, to) {
+        return this.isValidRookMove(board, from, to) || this.isValidBishopMove(board, from, to);
+    }
+
+    isValidKingMove(from, to) {
+        const rowDiff = Math.abs(to.row - from.row);
+        const colDiff = Math.abs(to.col - from.col);
+        return rowDiff <= 1 && colDiff <= 1;
+    }
+
+    isPathClear(board, from, to) {
+        const rowStep = to.row > from.row ? 1 : to.row < from.row ? -1 : 0;
+        const colStep = to.col > from.col ? 1 : to.col < from.col ? -1 : 0;
+        
+        let currentRow = from.row + rowStep;
+        let currentCol = from.col + colStep;
+        
+        while (currentRow !== to.row || currentCol !== to.col) {
+            if (board[currentRow][currentCol]) return false;
+            currentRow += rowStep;
+            currentCol += colStep;
+        }
+        
+        return true;
     }
 
     highlightSquare(row, col) {
@@ -300,7 +420,7 @@ class ChessGame {
 
     clearHighlights() {
         document.querySelectorAll('.square').forEach(square => {
-            square.classList.remove('selected', 'possible-move');
+            square.classList.remove('selected', 'possible-move', 'capture');
         });
     }
 }
